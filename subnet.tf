@@ -10,7 +10,7 @@ resource "aws_subnet" "public_subnet" {
   }
 }
 
-resource "aws_subnet" "private-subnet" {
+resource "aws_subnet" "private_subnet" {
   count             = var.private_subnet_count
   vpc_id            = aws_vpc.primary_vpc.id
   cidr_block        = var.private_cidrs[count.index]
