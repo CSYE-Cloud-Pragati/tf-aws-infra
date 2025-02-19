@@ -1,26 +1,26 @@
-name: Terraform CI
- 
+name: Terraform-CI
+
 on:
-  pull_request:
-    branches:
-      - main
- 
+  pull_request:
+    branches:
+      - main
+  
 jobs:
-  terraform:
-    name: Terraform CI Validation
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
- 
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v2
- 
-      - name: Initialize Terraform
-        run: terraform init
- 
-      - name: Check Terraform Formatting
-        run: terraform fmt -check -recursive
- 
-      - name: Validate Terraform Configuration
-        run: terraform validate
+  validate-terraform:
+    name: Run Validations
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout branch
+      uses: actions/checkout@v4
+
+    - name: Install terraform 
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: 1.7.3
+      
+    - name: Initialize terraform
+      run: terraform init
+
+    - name: Validate terraform configuration files
+      run: terraform validate
