@@ -1,5 +1,4 @@
-name: validate-terraform
-
+name: Terraform-CI
 on:
   pull_request:
     branches:
