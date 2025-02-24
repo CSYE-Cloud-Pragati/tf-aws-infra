@@ -1,4 +1,4 @@
-resource "aws_subnet" "public_subnet2review" {
+resource "aws_subnet" "public_subnet"   {
   count                   = var.public_subnet_count
   vpc_id                  = aws_vpc.primary_vpc.id
   cidr_block              = var.public_cidrs[count.index]
