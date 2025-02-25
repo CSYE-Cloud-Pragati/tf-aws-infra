@@ -46,3 +46,13 @@ variable "public_route_cidr" {
 data "aws_availability_zones" "available" {
   state = "available"
 }
+
+variable "ami_id" {
+  type        = string
+  description = "Custom AMI ID for EC2 instance"
+}
+
+variable "app_port" {
+  type        = number
+  description = "Port on which the application runs"
+}
