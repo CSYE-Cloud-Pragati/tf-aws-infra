@@ -52,7 +52,32 @@ variable "ami_id" {
   description = "Custom AMI ID for EC2 instance"
 }
 
+variable "instance_type" {
+  description = "Type of EC2 instance"
+  type        = string
+}
+
+variable "key_name" {
+  description = "Name of the SSH key pair for EC2"
+  type        = string
+}
+
+variable "vpc_id" {
+  description = "ID of the VPC where resources will be deployed"
+  type        = string
+}
+
 variable "app_port" {
   type        = number
   description = "Port on which the application runs"
+}
+
+variable "subnet_id" {
+  description = "Subnet ID where the EC2 instance will be launched"
+  type        = string
+}
+
+variable "security_group_name" {
+  description = "Security group name for the EC2 instance"
+  type        = string
 }
