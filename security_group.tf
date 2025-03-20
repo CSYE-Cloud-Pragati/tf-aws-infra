@@ -1,6 +1,6 @@
 resource "aws_security_group" "application_sg" {
   name   = "app-security-group"
-  vpc_id = aws_vpc.primary_vpc.id 
+  vpc_id = aws_vpc.primary_vpc.id
 
   # Ingress rules for allowing incoming traffic
   ingress {
@@ -48,8 +48,8 @@ resource "aws_security_group" "db_security_group" {
 
   # Allow inbound traffic from the application security group
   ingress {
-    from_port       = 5432 
-    to_port         = 5432 
+    from_port       = 5432
+    to_port         = 5432
     protocol        = "tcp"
     security_groups = [aws_security_group.application_sg.id]
   }
