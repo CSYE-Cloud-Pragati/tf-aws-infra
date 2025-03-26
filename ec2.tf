@@ -32,6 +32,8 @@ resource "aws_instance" "webapp_instance" {
     echo "DB_PASSWORD=${var.db_password}" >> /opt/csye6225/.env
     echo "PORT=8080" >> /opt/csye6225/.env
     echo "S3_BUCKET=${aws_s3_bucket.app_bucket.id}" >> /opt/csye6225/.env
+    echo "NODE_ENV=prod" >> /opt/csye6225/.env
+    echo "USE_SSL=true" >> /opt/csye6225/.env
     
     # Restart webapp service to apply changes
     systemctl restart application.service
