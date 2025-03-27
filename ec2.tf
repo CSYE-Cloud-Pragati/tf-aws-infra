@@ -1,71 +1,49 @@
-###############################################################
-# ec2.tf
-# This file defines the EC2 instance that runs your web application.
-# It uses the instance profile defined in IAM for permissions.
-# Do not remove any existing declarations to avoid errors.
-###############################################################
-
 resource "aws_instance" "webapp_instance" {
-  # AMI ID to launch; this is provided as a variable.
-  ami = var.ami_id
-
-  # SSH key name for accessing the instance.
-  key_name = var.key_name
-
-  # Instance type (e.g., t2.micro).
-  instance_type = var.instance_type
-
-  # Security groups for the instance.
+  ami                    = var.ami_id
+  key_name               = var.key_name
+  instance_type          = var.instance_type
   vpc_security_group_ids = [aws_security_group.application_sg.id]
+  subnet_id              = aws_subnet.public_subnet[0].id
 
-  # Subnet in which to launch the instance.
-  subnet_id = aws_subnet.public_subnet[0].id
-
-  # Root block device configuration.
   root_block_device {
     volume_size           = 25
     volume_type           = "gp2"
     delete_on_termination = true
   }
 
-  # Disable accidental termination protection.
   disable_api_termination = false
 
-  # Attach the IAM instance profile.
-  # NOTE: Currently referencing the S3 role that also has CloudWatch permissions attached.
-  # If you prefer the dedicated CloudWatch Agent profile, comment this line and
-  # uncomment the second line.
   iam_instance_profile = aws_iam_instance_profile.ec2_profile.name
-  # iam_instance_profile = aws_iam_instance_profile.cloudwatch_agent_instance_profile.name
 
-  # User data script to configure the environment, embed CloudWatch Agent JSON,
-  # create the necessary directory, and restart both the agent and the application.
   user_data = <<-EOF
     #!/bin/bash
 
-    # Remove any existing environment configuration file.
-    rm -f /opt/csye6225/.env
+    INSTANCE_ID=$(curl http://169.254.169.254/latest/meta-data/instance-id)
 
-    # Set environment variables for database configuration.
-    echo "DB_HOST=${aws_db_instance.app_db.address}" >> /opt/csye6225/.env
-    echo "DB_PORT=${aws_db_instance.app_db.port}" >> /opt/csye6225/.env
-    echo "DB_NAME=${aws_db_instance.app_db.db_name}" >> /opt/csye6225/.env
-    echo "DB_USERNAME=${var.db_username}" >> /opt/csye6225/.env
-    echo "DB_PASSWORD=${var.db_password}" >> /opt/csye6225/.env
-    echo "PORT=8080" >> /opt/csye6225/.env
-    echo "S3_BUCKET=${aws_s3_bucket.app_bucket.id}" >> /opt/csye6225/.env
-    echo "NODE_ENV=prod" >> /opt/csye6225/.env
-    echo "USE_SSL=true" >> /opt/csye6225/.env
+    # Set environment variables
+    cat <<EOT > /opt/csye6225/.env
+    DB_HOST=${aws_db_instance.app_db.address}
+    DB_PORT=${aws_db_instance.app_db.port}
+    DB_NAME=${aws_db_instance.app_db.db_name}
+    DB_USERNAME=${var.db_username}
+    DB_PASSWORD=${var.db_password}
+    PORT=8080
+    S3_BUCKET=${aws_s3_bucket.app_bucket.id}
+    NODE_ENV=prod
+    USE_SSL=true
+    EOT
 
-    # (Optional) Install or update the CloudWatch Agent if not already on the AMI.
-    # This snippet uses apt-get (Ubuntu/Debian). Adjust if your base AMI differs.
+    # Install CloudWatch Agent
     apt-get update -y
     apt-get install -y wget
     wget https://s3.amazonaws.com/amazoncloudwatch-agent/ubuntu/amd64/latest/amazon-cloudwatch-agent.deb -O /tmp/amazon-cloudwatch-agent.deb
     dpkg -i /tmp/amazon-cloudwatch-agent.deb
 
-    # Create the CloudWatch Agent config inline:
-    cat <<'CWAGENT_JSON' > /tmp/amazon-cloudwatch-agent.json
+    # Create the directory for config if not exists
+    mkdir -p /opt/aws/amazon-cloudwatch-agent/etc/
+
+    # Create CloudWatch Agent config (fixed valid schema)
+    cat <<CWAGENT_JSON > /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
     {
       "agent": {
         "metrics_collection_interval": 60,
@@ -79,11 +57,33 @@ resource "aws_instance" "webapp_instance" {
               "usage_user",
               "usage_system"
             ],
-            "totalcpu": true
+            "totalcpu": true,
+            "metrics_collection_interval": 60
+          },
+          "mem": {
+            "measurement": [
+              "mem_used_percent"
+            ],
+            "metrics_collection_interval": 60
+          },
+          "disk": {
+            "measurement": [
+              "used_percent"
+            ],
+            "resources": [
+              "/"
+            ],
+            "metrics_collection_interval": 60
+          },
+          "net": {
+            "measurement": [
+              "bytes_sent",
+              "bytes_recv"
+            ],
+            "metrics_collection_interval": 60
           },
           "statsd": {
-            "service_address": ":8125",
-            "metrics_aggregation_interval": 60
+            "service_address": ":8125"
           }
         }
       },
@@ -92,9 +92,10 @@ resource "aws_instance" "webapp_instance" {
           "files": {
             "collect_list": [
               {
-                "file_path": "/opt/csye6225/logs/myapp.log",
-                "log_group_name": "/aws/amazon-cloudwatch-agent/myapp",
-                "log_stream_name": "{instance_id}"
+                "file_path": "/opt/csye6225/logs/webapp.log",
+                "log_group_name": "/aws/amazon-cloudwatch-agent/webapp",
+                "log_stream_name": "{instance_id}",
+                "retention_in_days": 7
               }
             ]
           }
@@ -103,23 +104,25 @@ resource "aws_instance" "webapp_instance" {
     }
     CWAGENT_JSON
 
-    # Create the target directory for the CloudWatch Agent config.
-    mkdir -p /opt/aws/amazon-cloudwatch-agent/etc/
-    # Copy the config to the agent directory.
-    cp /tmp/amazon-cloudwatch-agent.json /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
-    # Enable and restart the CloudWatch Agent.
+    # Set ownership and permissions
+    mkdir -p /opt/csye6225/logs
+    chown -R csye6225:csye6225 /opt/csye6225
+    chmod -R 755 /opt/csye6225
+
+    chown root:root /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
+    chmod 644 /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
+
+    # Restart CloudWatch Agent
     systemctl enable amazon-cloudwatch-agent
     systemctl restart amazon-cloudwatch-agent
 
-    # Restart the application service to apply changes.
+    # Restart your app
     systemctl daemon-reload
     systemctl restart application.service
   EOF
 
-  # Ensure the RDS instance is created before launching this instance.
   depends_on = [aws_db_instance.app_db]
 
-  # Tag the instance for identification.
   tags = {
     Name = "WebApp-Instance"
   }

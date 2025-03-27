@@ -1,17 +1,4 @@
-###############################################################
-# iam.tf
-# This file contains IAM roles, policies, and instance profiles 
-# for your EC2 instance. It includes:
-#
-# 1. Resources for S3 access.
-# 2. Resources for the CloudWatch Agent (to enable logging and metrics).
-#
-# Do not remove any existing declarations to avoid errors.
-###############################################################
-
-###############################
-# Section 1: IAM Resources for EC2 S3 Access
-###############################
+# IAM Resources for EC2 S3 Access
 
 # IAM Role for EC2 S3 access.
 resource "aws_iam_role" "ec2_s3_access_role" {
@@ -22,8 +9,8 @@ resource "aws_iam_role" "ec2_s3_access_role" {
     Version = "2012-10-17"
     Statement = [
       {
-        Action    = "sts:AssumeRole"
-        Effect    = "Allow"
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
         Principal = {
           Service = "ec2.amazonaws.com"
         }
@@ -71,18 +58,13 @@ resource "aws_iam_instance_profile" "ec2_profile" {
   role = aws_iam_role.ec2_s3_access_role.name
 }
 
-# NEW: Attach CloudWatch permissions to the existing EC2 S3 Access Role.
-# This ensures that the role has permissions for logs and metrics:
-# logs:CreateLogGroup, logs:CreateLogStream, logs:PutLogEvents, logs:DescribeLogStreams,
-# and cloudwatch:PutMetricData.
+# Attach CloudWatch permissions to the existing EC2 S3 Access Role.
 resource "aws_iam_role_policy_attachment" "cw_policy_attachment_to_ec2_s3" {
   role       = aws_iam_role.ec2_s3_access_role.name
   policy_arn = aws_iam_policy.cloudwatch_agent_policy.arn
 }
 
-###############################
-# Section 2: IAM Resources for CloudWatch Agent
-###############################
+# IAM Resources for CloudWatch Agent
 
 # IAM Role for the CloudWatch Agent to publish logs and metrics.
 resource "aws_iam_role" "cloudwatch_agent_role" {
@@ -93,11 +75,11 @@ resource "aws_iam_role" "cloudwatch_agent_role" {
     Version = "2012-10-17"
     Statement = [
       {
-        Effect    = "Allow"
+        Effect = "Allow"
         Principal = {
           Service = "ec2.amazonaws.com"
         }
-        Action    = "sts:AssumeRole"
+        Action = "sts:AssumeRole"
       }
     ]
   })
@@ -114,19 +96,21 @@ resource "aws_iam_policy" "cloudwatch_agent_policy" {
     Version = "2012-10-17"
     Statement = [
       {
-        Effect   = "Allow"
-        Action   = [
+        Effect = "Allow"
+        Action = [
           "cloudwatch:PutMetricData"
         ]
         Resource = "*"
       },
       {
-        Effect   = "Allow"
-        Action   = [
+        Effect = "Allow"
+        Action = [
           "logs:CreateLogGroup",
           "logs:CreateLogStream",
           "logs:PutLogEvents",
-          "logs:DescribeLogStreams"
+          "logs:DescribeLogGroups",
+          "logs:DescribeLogStreams",
+          "logs:PutRetentionPolicy"
         ]
         Resource = "*"
       }
