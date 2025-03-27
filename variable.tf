@@ -84,3 +84,26 @@ variable "common_tags" {
   default     = {}
   type        = map(string)
 }
+
+variable "instance_type" {
+  type        = string
+  description = "EC2 instance type"
+  default     = "t2.micro"
+}
+
+variable "db_username" {
+  type        = string
+  description = "Database username for the RDS instance"
+}
+
+variable "db_password" {
+  type        = string
+  description = "Database password for the RDS instance"
+  sensitive   = true
+}
+
+variable "db_name" {
+  type        = string
+  description = "Name of the RDS database"
+  default     = "app_db"
+}
