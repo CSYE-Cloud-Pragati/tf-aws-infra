@@ -58,9 +58,9 @@ variable "key_name" {
   type        = string
 }
 
-variable "vpc_id" {
-  description = "ID of the VPC where resources will be deployed"
-  type        = string
+output "vpc_id" {
+  value       = aws_vpc.primary_vpc.id
+  description = "The ID of the newly created VPC"
 }
 
 variable "app_port" {
@@ -68,15 +68,15 @@ variable "app_port" {
   description = "Port on which the application runs"
 }
 
-variable "subnet_id" {
-  description = "Subnet ID where the EC2 instance will be launched"
-  type        = string
-}
+# variable "subnet_id" {
+#   description = "Subnet ID where the EC2 instance will be launched"
+#   type        = string
+# }
 
-variable "security_group_name" {
-  description = "Security group name for the EC2 instance"
-  type        = string
-}
+# variable "security_group_name" {
+#   description = "Security group name for the EC2 instance"
+#   type        = string
+# }
 
 
 variable "common_tags" {
@@ -106,4 +106,24 @@ variable "db_name" {
   type        = string
   description = "Name of the RDS database"
   default     = "app_db"
+}
+
+variable "iam_instance_profile_name" {
+  description = "IAM Instance Profile name for EC2 instances"
+  type        = string
+}
+
+# variable "public_subnet_ids" {
+#   description = "List of public subnet IDs"
+#   type        = list(string)
+# }
+
+variable "route53_zone_id" {
+  description = "Route 53 Hosted Zone ID for the domain/subdomain"
+  type        = string
+}
+
+variable "domain_name" {
+  description = "The domain or subdomain name (e.g., dev.pragatianrote.me)"
+  type        = string
 }
