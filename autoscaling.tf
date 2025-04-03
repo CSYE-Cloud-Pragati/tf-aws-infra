@@ -3,7 +3,7 @@ resource "aws_autoscaling_group" "webapp_asg" {
   max_size                  = 5
   min_size                  = 3
   desired_capacity          = 3
-  vpc_zone_identifier       = aws_subnet.public_subnet[*].id 
+  vpc_zone_identifier       = aws_subnet.public_subnet[*].id
   health_check_type         = "EC2"
   health_check_grace_period = 300
 
