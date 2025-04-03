@@ -127,3 +127,15 @@ variable "domain_name" {
   description = "The domain or subdomain name (e.g., dev.pragatianrote.me)"
   type        = string
 }
+
+variable "cpu_high_threshold" {
+  description = "CPU utilization threshold for scaling up (in percent)"
+  type        = number
+  default     = 8
+}
+
+variable "cpu_low_threshold" {
+  description = "CPU utilization threshold for scaling down (in percent)"
+  type        = number
+  default     = 7
+}
