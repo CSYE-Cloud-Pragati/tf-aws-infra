@@ -139,3 +139,13 @@ variable "cpu_low_threshold" {
   type        = number
   default     = 7
 }
+
+variable "demo_certificate_arn" {
+  description = "ARN for demo certificate"
+  type        = string
+}
+
+variable "dev_certificate_arn" {
+  description = "ARN for dev certificate"
+  type        = string
+}

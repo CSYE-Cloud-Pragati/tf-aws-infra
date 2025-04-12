@@ -21,6 +21,24 @@ resource "aws_db_subnet_group" "private_subnet_group" {
   subnet_ids = [for subnet in aws_subnet.private_subnet : subnet.id]
 }
 
+resource "random_password" "db_pass" {
+  length  = 16
+  special = false
+}
+
+resource "aws_secretsmanager_secret" "db_pass" {
+  name                    = "db_password_secret"
+  kms_key_id              = aws_kms_key.secrets_key.arn
+  recovery_window_in_days = 0
+
+}
+
+resource "aws_secretsmanager_secret_version" "db_password_secret_version" {
+  secret_id     = aws_secretsmanager_secret.db_pass.id
+  secret_string = jsonencode({ password = random_password.db_pass.result }) // Ensure var.db_password is stored securely as sensitive
+}
+
+
 # DB Instance
 resource "aws_db_instance" "app_db" {
   identifier             = "csye6225"
@@ -29,7 +47,7 @@ resource "aws_db_instance" "app_db" {
   engine_version         = "17"
   instance_class         = "db.t3.micro" # Cheapest option
   username               = var.db_username
-  password               = var.db_password
+  password               = random_password.db_pass.result
   db_name                = var.db_name
   parameter_group_name   = aws_db_parameter_group.app_db_param_group.name
   db_subnet_group_name   = aws_db_subnet_group.private_subnet_group.name
@@ -37,6 +55,7 @@ resource "aws_db_instance" "app_db" {
   publicly_accessible    = false
   multi_az               = false
   skip_final_snapshot    = true
-
+  storage_encrypted      = true
+  kms_key_id             = aws_kms_key.rds_key.arn
 }
 

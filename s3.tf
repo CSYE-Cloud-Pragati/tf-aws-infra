@@ -10,15 +10,28 @@ resource "aws_s3_bucket" "app_bucket" {
 }
 
 # Enable default encryption for the bucket
+# resource "aws_s3_bucket_server_side_encryption_configuration" "app_bucket_encryption" {
+#   bucket = aws_s3_bucket.app_bucket.id
+
+#   rule {
+#     apply_server_side_encryption_by_default {
+#       sse_algorithm = "AES256"
+#     }
+#   }
+# }
+
+# Encryption using the S3 KMS key
 resource "aws_s3_bucket_server_side_encryption_configuration" "app_bucket_encryption" {
   bucket = aws_s3_bucket.app_bucket.id
 
   rule {
     apply_server_side_encryption_by_default {
-      sse_algorithm = "AES256"
+      sse_algorithm     = "aws:kms"
+      kms_master_key_id = aws_kms_key.s3_key.arn
     }
   }
 }
+
 
 # Ownership Controls
 resource "aws_s3_bucket_ownership_controls" "app_bucket_ownership" {
