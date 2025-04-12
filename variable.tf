@@ -149,3 +149,4 @@ variable "dev_certificate_arn" {
   description = "ARN for dev certificate"
   type        = string
 }
+
