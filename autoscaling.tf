@@ -8,8 +8,7 @@ resource "aws_autoscaling_group" "webapp_asg" {
   health_check_grace_period = 300
 
   launch_template {
-    id      = aws_launch_template.webapp_lt.id
-    version = "$Latest"
+    id = aws_launch_template.webapp_lt.id
   }
 
   target_group_arns = [aws_lb_target_group.webapp_tg.arn]
