@@ -61,3 +61,13 @@ The infrastructure includes:
    ```bash
    terraform destroy
    ```
+
+## Importing an SSL Certificate into AWS Certificate Manager
+
+```
+aws acm import-certificate \
+  --certificate file://path/to/your_certificate.crt \
+  --private-key file://path/to/your_private_key.key \
+  --certificate-chain file://path/to/your_certificate_chain.crt \
+  --region us-east-1
+```
